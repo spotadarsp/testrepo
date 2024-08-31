@@ -3,7 +3,7 @@ WORKDIR /app
 
 
 
-COPT . /app
+COPY . /app
 
 
 
