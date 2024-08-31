@@ -1,5 +1,5 @@
 FROM UBUUNTU:2020
-
+WORKDIR /app
 
 
 
