@@ -1,2 +1,5 @@
 FROM UBUUNTU:2020
 
+
+COPT . /app
+
