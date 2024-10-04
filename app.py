@@ -1,18 +1,60 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, request
+import pymysql
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return "Welcome to the Flask Application!"
+def get_db_connection():
+    connection = pymysql.connect(host='mydb.cylck8yh5jkc.eu-central-1.rds.amazonaws.com',  # Replace with your RDS endpoint
+                                 user='dbuser',      # Replace with your RDS username
+                                 password='dbpassword',  # Replace with your RDS password
+                                 db='devprojdb',   # Replace with your database name
+                                 charset='utf8mb4',
+                                 cursorclass=pymysql.cursors.DictCursor)
+    return connection
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "Up & Running"}), 200
+    return "Up & Running"
 
-@app.route('/about')
-def about():
-    return jsonify({"message": "This is a simple Flask application."}), 200
+@app.route('/create_table')
+def create_table():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    create_table_query = """
+        CREATE TABLE IF NOT EXISTS example_table (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL
+        )
+    """
+    cursor.execute(create_table_query)
+    connection.commit()
+    connection.close()
+    return "Table created successfully"
+
+@app.route('/insert_record', methods=['POST'])
+def insert_record():
+    name = request.json['name']
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    insert_query = "INSERT INTO example_table (name) VALUES (%s)"
+    cursor.execute(insert_query, (name,))
+    connection.commit()
+    connection.close()
+    return "Record inserted successfully"
+
+@app.route('/data')
+def data():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM example_table')
+    result = cursor.fetchall()
+    connection.close()
+    return jsonify(result)
+
+# UI route
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)  # Run on all available interfaces on port 5000
+    app.run(debug=True, host='0.0.0.0')
